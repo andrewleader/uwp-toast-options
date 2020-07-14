@@ -1,12 +1,16 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Background;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Notifications;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -32,13 +36,10 @@ namespace UwpToastOptions
             this.Suspending += OnSuspending;
         }
 
-        /// <summary>
-        /// Invoked when the application is launched normally by the end user.  Other entry points
-        /// will be used such as when the application is launched to open a specific file.
-        /// </summary>
-        /// <param name="e">Details about the launch request and process.</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        private void OnLaunchedOrActivated(IActivatedEventArgs e)
         {
+            RegisterBackgroundTasks();
+
             Frame rootFrame = Window.Current.Content as Frame;
 
             // Do not repeat app initialization when the Window already has content,
@@ -59,18 +60,72 @@ namespace UwpToastOptions
                 Window.Current.Content = rootFrame;
             }
 
-            if (e.PrelaunchActivated == false)
+            if (!(e is LaunchActivatedEventArgs launchArgs && launchArgs.PrelaunchActivated == true))
             {
                 if (rootFrame.Content == null)
                 {
                     // When the navigation stack isn't restored navigate to the first page,
                     // configuring the new page by passing required information as a navigation
                     // parameter
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    rootFrame.Navigate(typeof(MainPage));
                 }
                 // Ensure the current window is active
                 Window.Current.Activate();
             }
+
+            if (e is ToastNotificationActivatedEventArgs toastArgs)
+            {
+                if (toastArgs.Argument == "openToast")
+                {
+                    _ = new MessageDialog("Toast clicked!").ShowAsync();
+                }
+            }
+        }
+
+        private void RegisterBackgroundTasks()
+        {
+            BackgroundTaskBuilder builder = new BackgroundTaskBuilder()
+            {
+                Name = "ToastAction",
+            };
+
+            builder.SetTrigger(new ToastNotificationActionTrigger());
+
+            builder.Register();
+        }
+
+        protected override void OnBackgroundActivated(BackgroundActivatedEventArgs args)
+        {
+            if (args.TaskInstance.TriggerDetails is ToastNotificationActionTriggerDetail toastDetail)
+            {
+                switch (toastDetail.Argument)
+                {
+                    case "backgroundAction":
+
+                        var content = new ToastContentBuilder()
+                            .AddText("Performed background action!")
+                            .GetToastContent();
+
+                        ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(content.GetXml()));
+
+                        break;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Invoked when the application is launched normally by the end user.  Other entry points
+        /// will be used such as when the application is launched to open a specific file.
+        /// </summary>
+        /// <param name="e">Details about the launch request and process.</param>
+        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        {
+            OnLaunchedOrActivated(e);
+        }
+
+        protected override void OnActivated(IActivatedEventArgs args)
+        {
+            OnLaunchedOrActivated(args);
         }
 
         /// <summary>

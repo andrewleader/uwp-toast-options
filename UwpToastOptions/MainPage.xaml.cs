@@ -1,10 +1,12 @@
-﻿using System;
+﻿using Microsoft.Toolkit.Uwp.Notifications;
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.UI.Notifications;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -29,12 +31,18 @@ namespace UwpToastOptions
 
         private void ButtonPopToast_Click(object sender, RoutedEventArgs e)
         {
+            var content = new ToastContentBuilder()
+                .AddText("Hello from WPF!")
+                .AddToastActivationInfo("openToast", ToastActivationType.Foreground)
+                .AddButton("Perform background action", ToastActivationType.Background, "backgroundAction")
+                .GetToastContent();
 
+            ToastNotificationManager.CreateToastNotifier().Show(new ToastNotification(content.GetXml()));
         }
 
         private void ButtonClearToasts_Click(object sender, RoutedEventArgs e)
         {
-
+            ToastNotificationManager.History.Clear();
         }
     }
 }
