@@ -32,7 +32,7 @@ namespace UwpToastOptions
         private void ButtonPopToast_Click(object sender, RoutedEventArgs e)
         {
             var content = new ToastContentBuilder()
-                .AddText("Hello from WPF!")
+                .AddText("Hello from UWP!")
                 .AddToastActivationInfo("openToast", ToastActivationType.Foreground)
                 .AddButton("Perform background action", ToastActivationType.Background, "backgroundAction")
                 .GetToastContent();
